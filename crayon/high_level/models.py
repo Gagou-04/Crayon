@@ -33,6 +33,9 @@ class Machine(models.Model):
     n_serie = models.IntegerField()
 
     def __str__(self):
+        return self.nom
+
+    def costs(self):
         return self.prix
 
 
@@ -44,7 +47,7 @@ class Usine(Local):
         for machine in self.machines.all():
             cout = cout + machine.costs()
 
-        cout = cout + self.surface * self.ville.prix_set.get()
+        cout = cout + self.surface * self.ville.prix_m_2
 
         for stock in self.stock_set.all():
             cout = cout + stock.costs()
@@ -78,7 +81,7 @@ class QuantiteRessource(models.Model):
         return self.nom
 
     def costs(self):
-        return self.quantite * self.ressource.prix_set.get()
+        return self.quantite * self.ressource.prix
 
 
 class Etape(models.Model):
@@ -109,10 +112,35 @@ class Stock(models.Model):
         return self.ressource.nom + " : {}".format(self.nombre)
 
     def costs(self):
-        return self.nombre * self.ressource.prix_set.get()
+        return self.nombre * self.ressource.prix
 
 
 class Produit(Objet):
     premiere_etape = models.ForeignKey(
         Etape, blank=True, null=True, on_delete=models.CASCADE
     )
+
+    def calculAchatRessources(self):
+        liste_ressources_necessaires = []
+        liste_ressources_a_achete = []
+        etape = self.premiere_etape
+        while etape.etape_suivante is not None:
+            liste_ressources_necessaires.append(etape.quantite_ressource)
+        for quantite_ressource in liste_ressources_necessaires:
+            if not Stock.objects.filter(ressource=quantite_ressource.ressource).exists:
+                liste_ressources_a_achete.append[quantite_ressource]
+            else:
+                quantite_ressource.quantite = (
+                    quantite_ressource.quantite
+                    - Stock.objects.filter(
+                        ressource=quantite_ressource.ressource
+                    ).first()
+                )
+                if quantite_ressource.quantite > 0:
+                    liste_ressources_a_achete.append[quantite_ressource]
+        affichage = ""
+        for quantite_ressource in liste_ressources_a_achete:
+            affichage = affichage + "\n - {} {}".format(
+                quantite_ressource.nom, quantite_ressource.quantite
+            )
+        return affichage
