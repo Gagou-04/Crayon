@@ -78,7 +78,7 @@ class QuantiteRessource(models.Model):
     quantite = models.IntegerField()
 
     def __str__(self):
-        return self.nom
+        return self.ressource.nom + ": {}".format(self.quantite)
 
     def costs(self):
         return self.quantite * self.ressource.prix
@@ -124,7 +124,9 @@ class Produit(Objet):
         liste_ressources_necessaires = []
         liste_ressources_a_achete = []
         etape = self.premiere_etape
+        liste_ressources_necessaires.append(etape.quantite_ressource)
         while etape.etape_suivante is not None:
+            etape = etape.etape_suivante
             liste_ressources_necessaires.append(etape.quantite_ressource)
         for quantite_ressource in liste_ressources_necessaires:
             if not Stock.objects.filter(ressource=quantite_ressource.ressource).exists:
@@ -132,15 +134,15 @@ class Produit(Objet):
             else:
                 quantite_ressource.quantite = (
                     quantite_ressource.quantite
-                    - Stock.objects.filter(
-                        ressource=quantite_ressource.ressource
-                    ).first()
+                    - Stock.objects.filter(ressource=quantite_ressource.ressource)
+                    .first()
+                    .nombre
                 )
                 if quantite_ressource.quantite > 0:
-                    liste_ressources_a_achete.append[quantite_ressource]
-        affichage = ""
+                    liste_ressources_a_achete.append(quantite_ressource)
         for quantite_ressource in liste_ressources_a_achete:
-            affichage = affichage + "\n - {} {}".format(
-                quantite_ressource.nom, quantite_ressource.quantite
+            print(
+                "{}: {}".format(
+                    quantite_ressource.ressource.nom, quantite_ressource.quantite
+                )
             )
-        return affichage
