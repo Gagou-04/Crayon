@@ -33,11 +33,23 @@ class Machine(models.Model):
     n_serie = models.IntegerField()
 
     def __str__(self):
-        return self.nom
+        return self.prix
 
 
 class Usine(Local):
     machines = models.ManyToManyField(Machine)
+
+    def costs(self):
+        cout = 0
+        for machine in self.machines.all():
+            cout = cout + machine.costs()
+
+        cout = cout + self.surface * self.ville.prix_set.get()
+
+        for stock in self.stock_set.all():
+            cout = cout + stock.costs()
+
+        return cout
 
 
 class Objet(models.Model):
@@ -65,6 +77,9 @@ class QuantiteRessource(models.Model):
     def __str__(self):
         return self.nom
 
+    def costs(self):
+        return self.quantite * self.ressource.prix_set.get()
+
 
 class Etape(models.Model):
     nom = models.CharField(max_length=100)
@@ -88,9 +103,13 @@ class Stock(models.Model):
         Ressource, blank=True, null=True, on_delete=models.CASCADE
     )
     nombre = models.IntegerField()
+    usine = models.ForeignKey(Usine, blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.ressource.nom + " : {}".format(self.nombre)
+
+    def costs(self):
+        return self.nombre * self.ressource.prix_set.get()
 
 
 class Produit(Objet):
