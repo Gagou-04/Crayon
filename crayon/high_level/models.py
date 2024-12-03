@@ -12,11 +12,15 @@ class Ville(models.Model):
 
     def json(self):
         d = {
+            "id": self.id,
             "nom": self.nom,
             "code_postal": self.code_postal,
             "prix_m_2": self.prix_m_2,
         }
         return d
+
+    def json_extended(self):
+        return self.json()
 
 
 class Local(models.Model):
@@ -36,12 +40,16 @@ class SiegeSocial(Local):
 
     def json(self):
         d = {
+            "id": self.id,
             "nom": self.nom,
             "ville": self.ville.nom,
             "surface": self.surface,
             "CEO": self.CEO,
         }
         return d
+
+    def json_extended(self):
+        return self.json()
 
 
 class Machine(models.Model):
@@ -57,11 +65,15 @@ class Machine(models.Model):
 
     def json(self):
         d = {
+            "id": self.id,
             "nom": self.nom,
             "prix": self.prix,
             "n_serie": self.n_serie,
         }
         return d
+
+    def json_extended(self):
+        return self.json()
 
 
 class Usine(Local):
@@ -84,8 +96,22 @@ class Usine(Local):
         for machine in self.machines.all():
             liste_machines.append(machine.nom)
         d = {
+            "id": self.id,
             "nom": self.nom,
             "ville": self.ville.nom,
+            "surface": self.surface,
+            "machines": liste_machines,
+        }
+        return d
+
+    def json_extended(self):
+        liste_machines = []
+        for machine in self.machines.all():
+            liste_machines.append(machine.json_extended())
+        d = {
+            "id": self.id,
+            "nom": self.nom,
+            "ville": self.ville.json_extended(),
             "surface": self.surface,
             "machines": liste_machines,
         }
@@ -109,10 +135,14 @@ class Ressource(Objet):
 
     def json(self):
         d = {
+            "id": self.id,
             "nom": self.nom,
             "prix": self.prix,
         }
         return d
+
+    def json_extended(self):
+        return self.json()
 
 
 class QuantiteRessource(models.Model):
@@ -129,7 +159,16 @@ class QuantiteRessource(models.Model):
 
     def json(self):
         d = {
+            "id": self.id,
             "ressource": self.ressource.nom,
+            "quantite": self.quantite,
+        }
+        return d
+
+    def json_extended(self):
+        d = {
+            "id": self.id,
+            "ressource": self.ressource.json_extended(),
             "quantite": self.quantite,
         }
         return d
@@ -153,12 +192,27 @@ class Etape(models.Model):
 
     def json(self):
         d = {
+            "id": self.id,
             "nom": self.nom,
             "machine": self.machine.nom,
             "quantite_ressource": self.quantite_ressource.ressource.nom,
             "duree": self.duree,
             "etape_suivante": self.etape_suivante.nom,
         }
+        return d
+
+    def json_extended(self):
+        d = {
+            "id": self.id,
+            "nom": self.nom,
+            "machine": self.machine.json(),
+            "quantite_ressource": self.quantite_ressource.json_extended(),
+            "duree": self.duree,
+        }
+        if self.etape_suivante:
+            d["etape_suivante"] = self.etape_suivante.json_extended()
+        else:
+            d["etape_suivante"] = None
         return d
 
 
@@ -177,9 +231,19 @@ class Stock(models.Model):
 
     def json(self):
         d = {
+            "id": self.id,
             "ressource": self.ressource.nom,
             "nombre": self.nombre,
             "usine": self.usine.nom,
+        }
+        return d
+
+    def json_extended(self):
+        d = {
+            "id": self.id,
+            "ressource": self.ressource.json_extended(),
+            "nombre": self.nombre,
+            "usine": self.usine.json_extended(),
         }
         return d
 
@@ -218,8 +282,18 @@ class Produit(Objet):
 
     def json(self):
         d = {
-            "nom": self.ressource.nom,
+            "id": self.id,
+            "nom": self.nom,
             "prix": self.prix,
             "premiere_etape": self.premiere_etape.nom,
+        }
+        return d
+
+    def json_extended(self):
+        d = {
+            "id": self.id,
+            "nom": self.nom,
+            "prix": self.prix,
+            "premiere_etape": self.premiere_etape.json_extended(),
         }
         return d

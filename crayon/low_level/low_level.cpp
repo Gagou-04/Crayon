@@ -16,6 +16,11 @@ class Ville {
     return out << ville._nom << " : " << ville._code_postal << ", "
                << ville._prix_m_2 << " euros/m^2";
   }
+  Ville(nlohmann::json j) {
+    _nom = j["nom"];
+    _code_postal = j["code_postal"];
+    _prix_m_2 = j["prix_m_2"];
+  }
   Ville(int id) {
     std::string url = "http://localhost:8000/ville/" + std::to_string(id);
     cpr::Response r = cpr::Get(cpr::Url{url});
@@ -58,18 +63,12 @@ class Usine {
   std::string _nom;
   std::unique_ptr<Ville> _ville;
   int _surface;
-  std::unique_ptr<Machine> _machines;
+  std::vector<std::unique_ptr<Machine>> _machines;
 
  public:
-  Usine(std::string nom, std::unique_ptr<Ville> ville, int surface,
-        std::unique_ptr<Machine> machine)
-      : _nom{nom},
-        _ville{ville->get_nom()},
-        _surface{surface},
-        _machines{machine->get_nom()} {}
   friend std::ostream& operator<<(std::ostream& out, const Usine& usine) {
-    return out << usine._nom << " : " << usine._ville._nom << ", "
-               << usine._surface << " m^2" << usine._machines.nom;
+    return out << usine._nom << " : " << usine._ville->get_nom() << ", "
+               << usine._surface << " m^2";  //<< usine._machines.nom;
   }
   Usine(int id) {
     std::string url = "http://localhost:8000/usine/" + std::to_string(id);
@@ -77,14 +76,17 @@ class Usine {
     // r.status_code;
     nlohmann::json j = nlohmann::json::parse(r.text);
     _nom = j["nom"];
-    _ville = j["ville"];
+    _ville = std::make_unique<Ville>(j["ville"]);
     _surface = j["surface"];
-    _machines = j["machines"];
+    //_machines = j["machines"];
   }
 };
 
 auto main() -> int {
   std::cout << Ville(1) << std::endl;
   std::cout << Ville(3) << std::endl;
+  std::cout << Machine(1) << std::endl;
+  std::cout << Machine(2) << std::endl;
+  std::cout << Usine(1) << std::endl;
   return 0;
 }
