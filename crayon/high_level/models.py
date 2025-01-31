@@ -7,10 +7,10 @@ class Ville(models.Model):
     code_postal = models.IntegerField()
     prix_m_2 = models.IntegerField()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.nom
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,
@@ -19,7 +19,7 @@ class Ville(models.Model):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         return self.json()
 
 
@@ -31,14 +31,14 @@ class Local(models.Model):
     class Meta:
         abstract = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.nom
 
 
 class SiegeSocial(Local):
     CEO = models.CharField(max_length=100)
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,
@@ -48,7 +48,7 @@ class SiegeSocial(Local):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         return self.json()
 
 
@@ -57,13 +57,13 @@ class Machine(models.Model):
     prix = models.IntegerField()
     n_serie = models.IntegerField()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.nom
 
-    def costs(self):
+    def costs(self) -> float:
         return self.prix
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,
@@ -72,14 +72,14 @@ class Machine(models.Model):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         return self.json()
 
 
 class Usine(Local):
     machines = models.ManyToManyField(Machine)
 
-    def costs(self):
+    def costs(self) -> float:
         cout = 0
         for machine in self.machines.all():
             cout = cout + machine.costs()
@@ -91,7 +91,7 @@ class Usine(Local):
 
         return cout
 
-    def json(self):
+    def json(self) -> dict:
         liste_machines = []
         for machine in self.machines.all():
             liste_machines.append(machine.nom)
@@ -104,7 +104,7 @@ class Usine(Local):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         liste_machines = []
         for machine in self.machines.all():
             liste_machines.append(machine.json_extended())
@@ -125,15 +125,15 @@ class Objet(models.Model):
     class Meta:
         abstract = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.nom
 
 
 class Ressource(Objet):
-    def __str__(self):
+    def __str__(self) -> str:
         return self.nom
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,
@@ -141,7 +141,7 @@ class Ressource(Objet):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         return self.json()
 
 
@@ -151,13 +151,13 @@ class QuantiteRessource(models.Model):
     )
     quantite = models.IntegerField()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.ressource.nom + ": {}".format(self.quantite)
 
-    def costs(self):
+    def costs(self) -> float:
         return self.quantite * self.ressource.prix
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "ressource": self.ressource.nom,
@@ -165,7 +165,7 @@ class QuantiteRessource(models.Model):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         d = {
             "id": self.id,
             "ressource": self.ressource.json_extended(),
@@ -187,10 +187,10 @@ class Etape(models.Model):
         "self", null=True, on_delete=models.CASCADE, blank=True
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.nom
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,
@@ -201,7 +201,7 @@ class Etape(models.Model):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,
@@ -223,13 +223,13 @@ class Stock(models.Model):
     nombre = models.IntegerField()
     usine = models.ForeignKey(Usine, blank=True, null=True, on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.ressource.nom + " : {}".format(self.nombre)
 
-    def costs(self):
+    def costs(self) -> float:
         return self.nombre * self.ressource.prix
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "ressource": self.ressource.nom,
@@ -238,7 +238,7 @@ class Stock(models.Model):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         d = {
             "id": self.id,
             "ressource": self.ressource.json_extended(),
@@ -253,7 +253,7 @@ class Produit(Objet):
         Etape, blank=True, null=True, on_delete=models.CASCADE
     )
 
-    def calculAchatRessources(self):
+    def calculAchatRessources(self) -> list:
         liste_ressources_necessaires = []
         liste_ressources_a_achete = []
         etape = self.premiere_etape
@@ -262,8 +262,11 @@ class Produit(Objet):
             etape = etape.etape_suivante
             liste_ressources_necessaires.append(etape.quantite_ressource)
         for quantite_ressource in liste_ressources_necessaires:
-            if not Stock.objects.filter(ressource=quantite_ressource.ressource).exists:
-                liste_ressources_a_achete.append[quantite_ressource]
+            if (
+                Stock.objects.filter(ressource=quantite_ressource.ressource).first()
+                is None
+            ):
+                liste_ressources_a_achete.append(quantite_ressource)
             else:
                 quantite_ressource.quantite = (
                     quantite_ressource.quantite
@@ -273,14 +276,19 @@ class Produit(Objet):
                 )
                 if quantite_ressource.quantite > 0:
                     liste_ressources_a_achete.append(quantite_ressource)
+        print("Ressources en stock :")
+        if Stock.objects.first() is None:
+            print(" Aucun stock")
+        else:
+            print(Stock.objects.all())
+            for stock in Stock.objects.all():
+                print(" - ", stock)
+            print("Ressources a acheter :")
         for quantite_ressource in liste_ressources_a_achete:
-            print(
-                "{}: {}".format(
-                    quantite_ressource.ressource.nom, quantite_ressource.quantite
-                )
-            )
+            print(" - ", quantite_ressource)
+        return liste_ressources_a_achete
 
-    def json(self):
+    def json(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,
@@ -289,7 +297,7 @@ class Produit(Objet):
         }
         return d
 
-    def json_extended(self):
+    def json_extended(self) -> dict:
         d = {
             "id": self.id,
             "nom": self.nom,

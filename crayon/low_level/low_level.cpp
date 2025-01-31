@@ -23,6 +23,7 @@ class Ville {
   }
   Ville(int id) {
     std::string url = "http://localhost:8000/ville/" + std::to_string(id);
+    std::cout << "Salut2 !" << std::endl;
     cpr::Response r = cpr::Get(cpr::Url{url});
     // r.status_code;
     nlohmann::json j = nlohmann::json::parse(r.text);
@@ -35,6 +36,7 @@ class Ville {
 };
 
 class Machine {
+  int _id;
   std::string _nom;
   int _prix;
   int _n_serie;
@@ -47,10 +49,16 @@ class Machine {
                << " | prix : " << machine._prix << " euros";
   }
   Machine(int id) {
+    std::cout << "Salut6 !" << std::endl;
+    std::cout << "\n\n Press Enter to continue: ";
+    std::cin.get();
     std::string url = "http://localhost:8000/machine/" + std::to_string(id);
+    std::cout << "Salut7 !" << std::endl;
     cpr::Response r = cpr::Get(cpr::Url{url});
+    std::cout << "Salut8 !" << std::endl;
     // r.status_code;
     nlohmann::json j = nlohmann::json::parse(r.text);
+    _id = j["id"];
     _nom = j["nom"];
     _prix = j["prix"];
     _n_serie = j["n_serie"];
@@ -83,6 +91,7 @@ class Usine {
 };
 
 auto main() -> int {
+  std::cout << "Start Program" << std::endl;
   std::cout << Ville(1) << std::endl;
   std::cout << Ville(3) << std::endl;
   std::cout << Machine(1) << std::endl;
